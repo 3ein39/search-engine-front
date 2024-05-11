@@ -14,30 +14,29 @@ async function getUrlForFile(filename) {
   return fileToUrl[filename];
 }
 
-let data = null;
 
 const getURLs = async (query) => {
   try {
-    if (!data) {
-      data = await fs.readFile("./part-r-00000", "utf8");
-      console.log("DATA READ");
-    }
+    
+    const  data = await fs.readFile("./part-r-00000", "utf8");
     const lines = data.split("\n");
     const words = query.split(" ");
-    let totalDocuments = 0;
+
+    const urlsAndFrequencies = new PriorityQueue({
+      comparator: (a, b) => b.tfIdf - a.tfIdf,
+    });
+
+    const urlSet = new Set();
 
     for (const word of words) {
       const escapedWord = escapeRegExp(word);
       const regex = new RegExp(`(^|\\s)${escapedWord}(?=\\s|$)`, "gu");
       const results = lines.filter((line) => regex.test(line));
-      const urlsAndFrequencies = new PriorityQueue({
-        comparator: (a, b) => b.tfIdf - a.tfIdf,
-      });
 
       for (const result of results) {
         const [foundWord, urls] = result.split("\t");
         const urlsArray = urls.split(";");
-        totalDocuments = urlsArray.length + 1;
+        let totalDocuments = urlsArray.length + 1;
 
         let totalFrequency = 0;
         urlsArray.forEach((url) => {
@@ -56,10 +55,16 @@ const getURLs = async (query) => {
           });
         });
       }
-      while (urlsAndFrequencies.length > 0) {
-        const urlObj = urlsAndFrequencies.dequeue();
-        const urlWithFile = await getUrlForFile(urlObj.url + ".txt");
+    }
+
+    while (urlsAndFrequencies.length > 0) {
+      const urlObj = urlsAndFrequencies.dequeue();
+      const urlWithFile = await getUrlForFile(urlObj.url + ".txt");
+
+      if (!urlSet.has(urlWithFile)) {
+        console.log(`URL: ${urlWithFile} TF-IDF: ${urlObj.tfIdf}`);
         links.push(urlWithFile);
+        urlSet.add(urlWithFile);
       }
     }
   } catch (err) {
