@@ -31,14 +31,14 @@
       <label class="radio flex flex-grow items-center justify-center rounded-lg p-1 cursor-pointer">
         <input v-model="search_type" type="radio" name="radio" value="pageRank" class="peer hidden" />
         <span
-          class="tracking-widest peer-checked:bg-gradient-to-r peer-checked:from-[#2af598] peer-checked:to-[#009efd] peer-checked:text-white text-white font-light p-2 rounded-lg">Page
-          Rank</span>
+          class="tracking-widest peer-checked:bg-gradient-to-r peer-checked:from-[#2af598] peer-checked:to-[#009efd] peer-checked:text-white text-white font-light p-2 rounded-lg">
+          Page Rank
+        </span>
       </label>
     </div>
   </main>
 </template>
 
-<!-- The rest of your code remains the same -->
 <script setup>
 import { ref, computed } from 'vue';
 const value = ref("");
@@ -80,25 +80,27 @@ const paginatedContent = computed(() => {
 </script>
 
 <style>
-.ant-pagination-item-ellipsis {
-  color: white !important;
-}
-.ant-pagination .ant-pagination-item a {
-  color: white !important;
-}
 
 .ant-pagination .ant-pagination-item-active {
   background-color: transparent !important;
   border-color: #1DDAB7 !important;
+  border-radius: 50% !important;
 }
 
-
-
-.ant-pagination .ant-pagination-next button {
-  color: white !important;
+.ant-select-selector {
+  background-color: #2f3640 !important;
+  border: 1px solid #2f3640 !important;
 }
 
-.ant-pagination .ant-pagination-prev button {
+.ant-pagination-options{
+   display: none !important;
+}
+
+.ant-pagination .ant-pagination-item a,
+.ant-pagination-item-ellipsis,
+.ant-pagination .ant-pagination-next button,
+.ant-pagination .ant-pagination-prev button,
+.ant-select-selection-item {
   color: white !important;
 }
 
@@ -144,8 +146,7 @@ const paginatedContent = computed(() => {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: var(--gradient-2,
-      linear-gradient(90deg, #2af598 0%, #009efd 100%));
+  background: var(--gradient-2, linear-gradient(90deg, #2af598 0%, #009efd 100%));
   border: 0;
   display: flex;
   align-items: center;
