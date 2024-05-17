@@ -1,35 +1,73 @@
 <template>
-  <main class="min-h-screen bg-gray-800 flex justify-center items-center flex-col gap-10">
+  <main
+    class="min-h-screen bg-gray-800 flex justify-center items-center flex-col gap-10"
+  >
     <div class="flex flex-col bg-[#2f3640] w-2/4 rounded-t-3xl">
       <div class="searchBox">
-        <input class="searchInput border-b border-gray-400" type="text" name="" placeholder="Search something"
-          v-model="value" @keyup.enter="searchValueChange" />
+        <input
+          class="searchInput border-b border-gray-400"
+          type="text"
+          name=""
+          placeholder="Search something"
+          v-model="value"
+          @keyup.enter="searchValueChange"
+        />
         <button class="searchButton" @click="searchValueChange">
           <FileSearchOutlined style="font-size: 24px" />
         </button>
       </div>
       <div>
-        <transition-group name="fade" tag="div" class="max-h-80 flex flex-col w-full overflow-y-auto">
-          <a :href="item" v-for="(item, index) in fakeContent" :key="index"
-            class="text-white p-6 border-b-2 border-gray-700 text-left hover:bg-gray-700 flex items-center gap-4 truncate">
+        <transition-group
+          name="fade"
+          tag="div"
+          class="max-h-80 flex flex-col w-full overflow-y-auto"
+        >
+          <a
+            :href="item"
+            v-for="(item, index) in fakeContent"
+            :key="index"
+            class="text-white p-6 border-b-2 border-gray-700 text-left hover:bg-gray-700 flex items-center gap-4 truncate"
+          >
             <SearchOutlined />
             {{ item }}
           </a>
         </transition-group>
       </div>
     </div>
-    <div class="flex space-x-2 border-[3px] border-[#1DDAB7] rounded-xl select-none">
-      <label class="radio flex flex-grow items-center justify-center rounded-lg p-1 cursor-pointer">
-        <input type="radio" name="radio" value="tfidf" class="peer hidden" checked="" v-model="search_type" />
+    <div
+      class="flex space-x-2 border-[3px] border-[#1DDAB7] rounded-xl select-none"
+    >
+      <label
+        class="radio flex flex-grow items-center justify-center rounded-lg p-1 cursor-pointer"
+      >
+        <input
+          type="radio"
+          name="radio"
+          value="tfidf"
+          class="peer hidden"
+          checked=""
+          v-model="search_type"
+        />
         <span
-          class="tracking-widest peer-checked:bg-gradient-to-r peer-checked:from-[#2af598] peer-checked:to-[#009efd] peer-checked:text-white text-white font-light p-2 rounded-lg transition duration-150 ease-in-out">TF-IDF</span>
+          class="tracking-widest peer-checked:bg-gradient-to-r peer-checked:from-[#2af598] peer-checked:to-[#009efd] peer-checked:text-white text-white font-light p-2 rounded-lg transition duration-150 ease-in-out"
+          >TF-IDF</span
+        >
       </label>
 
-      <label class="radio flex flex-grow items-center justify-center rounded-lg p-1 cursor-pointer">
-        <input v-model="search_type" type="radio" name="radio" value="pageRank" class="peer hidden" />
+      <label
+        class="radio flex flex-grow items-center justify-center rounded-lg p-1 cursor-pointer"
+      >
+        <input
+          v-model="search_type"
+          type="radio"
+          name="radio"
+          value="pageRank"
+          class="peer hidden"
+        />
         <span
-          class="tracking-widest peer-checked:bg-gradient-to-r peer-checked:from-[#2af598] peer-checked:to-[#009efd] peer-checked:text-white text-white font-light p-2 rounded-lg transition duration-150 ease-in-out">Page
-          Rank</span>
+          class="tracking-widest peer-checked:bg-gradient-to-r peer-checked:from-[#2af598] peer-checked:to-[#009efd] peer-checked:text-white text-white font-light p-2 rounded-lg transition duration-150 ease-in-out"
+          >Page Rank</span
+        >
       </label>
     </div>
   </main>
@@ -41,16 +79,28 @@ const value = ref("");
 const search_type = ref("tfidf");
 const fakeContent = ref([]);
 
-const searchValueChange = async () => {
+watch(search_type, () => {
+  searchValueChange();
+});
 
+const searchValueChange = async () => {
   if (search_type.value === "tfidf") {
-    const { data } = await useFetch(`/api/server?value=${value.value}`);
-    console.log(data.value.results);
+    const { data } = await useFetch(`/api/tf-idf?value=${value.value}`);
     fakeContent.value = data.value.results;
-  }
-  else {
-    console.log('page rank')
-    fakeContent.value = ['page rank 1', 'page rank 2', 'page rank 3', 'page rank 4', 'page rank 5', 'page rank 6', 'page rank 7', 'page rank 8', 'page rank 9', 'page rank 10'];
+  } else {
+    console.log("page rank");
+    fakeContent.value = [
+      "page rank 1",
+      "page rank 2",
+      "page rank 3",
+      "page rank 4",
+      "page rank 5",
+      "page rank 6",
+      "page rank 7",
+      "page rank 8",
+      "page rank 9",
+      "page rank 10",
+    ];
   }
 };
 </script>
@@ -108,8 +158,7 @@ const searchValueChange = async () => {
 .fade-enter,
 .fade-leave-to
 
-/* .fade-leave-active in <2.1.8 */
-  {
+/* .fade-leave-active in <2.1.8 */ {
   opacity: 0;
 }
 
@@ -130,8 +179,10 @@ const searchValueChange = async () => {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: var(--gradient-2,
-      linear-gradient(90deg, #2af598 0%, #009efd 100%));
+  background: var(
+    --gradient-2,
+    linear-gradient(90deg, #2af598 0%, #009efd 100%)
+  );
   border: 0;
   display: flex;
   align-items: center;
