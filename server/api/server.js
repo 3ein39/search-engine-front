@@ -1,89 +1,98 @@
-import fs from "fs/promises";
-import PriorityQueue from "js-priority-queue";
+import fs from "fs";
 
-let links = [];
+const url_to_file_map = JSON.parse(
+  fs.readFileSync("./server/util/fileToUrl.json")
+);
 
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+let results = [];
+
+
+async function main(query) {
+  const invertedIndex = await fs.promises.readFile("./part-r-00000", "utf8");
+
+  const lines = invertedIndex.split("\n");
+
+  const invertedIndexDict = {};
+
+  lines.forEach((line) => {
+    let [word, urls] = line.split("\t");
+   
+    if (urls) {
+      urls = urls.split(";");
+      urls.forEach((url) => {
+        url = url.split(":");
+        const name = url[0];
+        const freq = url[1];
+        const total = url[2];
+        if (!invertedIndexDict[word]) {
+          invertedIndexDict[word] = [];
+        }
+        invertedIndexDict[word].push(`${name}.txt ${freq} ${total}`);
+      });
+    }
+  });
+
+  results =  search(invertedIndexDict , query);
 }
 
-async function getUrlForFile(filename) {
-  const fileToUrl = JSON.parse(
-    await fs.readFile("./server/util/fileToUrl.json", "utf-8")
-  );
-  return fileToUrl[filename];
+function search(invertedIndex, query) {
+  query = query.split(" ");
+
+  const pages = new Set();
+
+  query.forEach((word) => {
+    word = word.toLowerCase();
+    if (invertedIndex[word]) {
+      invertedIndex[word].forEach((page) => {
+        pages.add(page);
+      });
+    }
+  });
+
+  const totalDocuments = pages.size;
+
+  let tfidfScores = {};
+
+  query.forEach((word) => {
+    if (invertedIndex[word]) {
+      invertedIndex[word].forEach((docFreqTotal) => {
+        let [page, freq, total] = docFreqTotal.split(" ");
+        const tf = freq / total;
+        const idf = Math.log(totalDocuments / invertedIndex[word].length);
+        const tfidf = tf * idf;
+
+        if (url_to_file_map[page]) {
+          page = url_to_file_map[page];
+
+          if (!tfidfScores[page]) {
+            tfidfScores[page] = 0;
+          }
+
+          tfidfScores[page] += tfidf;
+        }
+      });
+    }
+  });
+
+  let tfidfScoresArray = Object.entries(tfidfScores);
+
+  tfidfScoresArray.sort((a, b) => b[1] - a[1]);
+
+  let urls = tfidfScoresArray.map(pair => pair[0]);
+
+
+  return urls;
 }
-
-
-const getURLs = async (query) => {
-  try {
-    
-    const  data = await fs.readFile("./part-r-00000", "utf8");
-    const lines = data.split("\n");
-    const words = query.split(" ");
-
-    const urlsAndFrequencies = new PriorityQueue({
-      comparator: (a, b) => b.tfIdf - a.tfIdf,
-    });
-
-    const urlSet = new Set();
-
-    for (const word of words) {
-      const escapedWord = escapeRegExp(word);
-      const regex = new RegExp(`(^|\\s)${escapedWord}(?=\\s|$)`, "gu");
-      const results = lines.filter((line) => regex.test(line));
-
-      for (const result of results) {
-        const [foundWord, urls] = result.split("\t");
-        const urlsArray = urls.split(";");
-        let totalDocuments = urlsArray.length + 1;
-
-        let totalFrequency = 0;
-        urlsArray.forEach((url) => {
-          const [filename, frequency, totalWords] = url.split(":");
-          totalFrequency += parseInt(frequency, 10);
-        });
-
-        urlsArray.forEach((url) => {
-          const [filename, frequency, totalWords] = url.split(":");
-          const tf = parseInt(frequency, 10) / parseInt(totalWords, 10);
-          const idf = Math.log(totalDocuments / totalFrequency);
-          const tfIdf = tf * idf;
-          urlsAndFrequencies.queue({
-            url: filename,
-            tfIdf,
-          });
-        });
-      }
-    }
-
-    while (urlsAndFrequencies.length > 0) {
-      const urlObj = urlsAndFrequencies.dequeue();
-      const urlWithFile = await getUrlForFile(urlObj.url + ".txt");
-
-      if (!urlSet.has(urlWithFile)) {
-        console.log(`URL: ${urlWithFile} TF-IDF: ${urlObj.tfIdf}`);
-        links.push(urlWithFile);
-        urlSet.add(urlWithFile);
-      }
-    }
-  } catch (err) {
-    console.error(err);
-    console.log("An error occurred while reading the file.");
-  }
-};
 
 export default defineEventHandler(async (event) => {
   const { value } = getQuery(event);
   if (!value) {
     return {
-      links: [],
+      results: [],
     };
   }
-  links = [];
-  await getURLs(value.toLowerCase());
-
+  await main(value.toLowerCase());
   return {
-    links: links,
+    results: results,
   };
 });
