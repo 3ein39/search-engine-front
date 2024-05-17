@@ -19,6 +19,7 @@
       </div>
     </div>
     <a-pagination class="custom-pagination" :current="currentPage" :total="totalItems" :pageSize="itemsPerPage"
+      v-if="fakeContent.length > 0"
       @change="handlePageChange" />
 
     <div class="flex space-x-2 border-[3px] border-[#1DDAB7] rounded-xl select-none">
