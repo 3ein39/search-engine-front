@@ -1,15 +1,16 @@
 import fs from "fs";
 
-const url_to_file_map = JSON.parse(fs.readFileSync("./server/util/fileToUrl.json"));
-// const pageRankResults = JSON.parse(fs.readFileSync("pageRankResults.json"));
+const url_to_file_map = JSON.parse(
+  fs.readFileSync("./server/util/fileToUrl.json")
+);
+const pageRankResults = JSON.parse(
+  fs.readFileSync("./server/util/pageRankResults.json")
+);
 
 let results = [];
 
-async function main() {
-  const invertedIndex = await fs.promises.readFile(
-    "./invertedIndex/output/part-r-00000",
-    "utf8"
-  );
+async function main(query) {
+  const invertedIndex = await fs.promises.readFile("./part-r-00000", "utf8");
 
   const lines = invertedIndex.split("\n");
 
@@ -31,7 +32,7 @@ async function main() {
     }
   });
 
-  results = search(invertedIndexDict);
+  results = search(invertedIndexDict, query);
 }
 
 function search(invertedIndex, query) {
@@ -61,4 +62,15 @@ function search(invertedIndex, query) {
   return urls;
 }
 
-main();
+export default defineEventHandler(async (event) => {
+  const { value } = getQuery(event);
+  if (!value) {
+    return {
+      results: [],
+    };
+  }
+  await main(value.toLowerCase());
+  return {
+    results: results,
+  };
+});

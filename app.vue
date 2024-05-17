@@ -49,7 +49,7 @@
           v-model="search_type"
         />
         <span
-          class="tracking-widest peer-checked:bg-gradient-to-r peer-checked:from-[#2af598] peer-checked:to-[#009efd] peer-checked:text-white text-white font-light p-2 rounded-lg transition duration-150 ease-in-out"
+          class="tracking-widest peer-checked:bg-gradient-to-r peer-checked:from-[#2af598] peer-checked:to-[#009efd] peer-checked:text-white text-white font-light p-2 rounded-lg"
           >TF-IDF</span
         >
       </label>
@@ -65,7 +65,7 @@
           class="peer hidden"
         />
         <span
-          class="tracking-widest peer-checked:bg-gradient-to-r peer-checked:from-[#2af598] peer-checked:to-[#009efd] peer-checked:text-white text-white font-light p-2 rounded-lg transition duration-150 ease-in-out"
+          class="tracking-widest peer-checked:bg-gradient-to-r peer-checked:from-[#2af598] peer-checked:to-[#009efd] peer-checked:text-white text-white font-light p-2 rounded-lg"
           >Page Rank</span
         >
       </label>
@@ -88,52 +88,13 @@ const searchValueChange = async () => {
     const { data } = await useFetch(`/api/tf-idf?value=${value.value}`);
     fakeContent.value = data.value.results;
   } else {
-    console.log("page rank");
-    fakeContent.value = [
-      "page rank 1",
-      "page rank 2",
-      "page rank 3",
-      "page rank 4",
-      "page rank 5",
-      "page rank 6",
-      "page rank 7",
-      "page rank 8",
-      "page rank 9",
-      "page rank 10",
-    ];
+    const { data } = await useFetch(`/api/page_rank?value=${value.value}`);
+    fakeContent.value = data.value.results;
   }
 };
 </script>
 
 <style scoped>
-@keyframes appear {
-  0% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-  }
-}
-
-.char {
-  animation: appear 0.5s ease-in-out forwards;
-  animation-delay: calc(0.1s * var(--i));
-}
-
-.text-gray-100 {
-  --i: 0;
-}
-
-.text-gray-100 .char {
-  --i: calc(var(--i) + 1);
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s ease;
-}
-
 /* The emerging W3C standard that is currently Firefox only */
 * {
   scrollbar-width: thin;
@@ -153,13 +114,6 @@ const searchValueChange = async () => {
   background-color: rgba(155, 155, 155, 0.7);
   border-radius: 20px;
   border: 3px solid rgba(0, 0, 0, 0.146);
-}
-
-.fade-enter,
-.fade-leave-to
-
-/* .fade-leave-active in <2.1.8 */ {
-  opacity: 0;
 }
 
 .searchBox {
