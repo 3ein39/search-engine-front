@@ -1,73 +1,38 @@
 <template>
-  <main
-    class="min-h-screen bg-gray-800 flex justify-center items-center flex-col gap-10"
-  >
+  <main class="min-h-screen bg-gray-800 flex justify-center items-center flex-col gap-10">
     <div class="flex flex-col bg-[#2f3640] w-2/4 rounded-t-3xl">
       <div class="searchBox">
-        <input
-          class="searchInput border-b border-gray-400"
-          type="text"
-          name=""
-          placeholder="Search something"
-          v-model="value"
-          @keyup.enter="searchValueChange"
-        />
-        <button class="searchButton" @click="searchValueChange">
+        <input class="searchInput border-b border-gray-400" type="text" name="" placeholder="Search something"
+          v-model="value" @keyup.enter="searchValueChange" :dir="direction" />
+        <button class="searchButton" :class="{'right-2' : direction === 'ltr', 'left-2': direction === 'rtl'}" @click="searchValueChange">
           <FileSearchOutlined style="font-size: 24px" />
         </button>
       </div>
       <div>
-        <transition-group
-          name="fade"
-          tag="div"
-          class="max-h-80 flex flex-col w-full overflow-y-auto"
-        >
-          <a
-            :href="item"
-            v-for="(item, index) in fakeContent"
-            :key="index"
-            class="text-white p-6 border-b-2 border-gray-700 text-left hover:bg-gray-700 flex items-center gap-4 truncate"
-          >
+        <transition-group name="fade" tag="div" class="max-h-80 flex flex-col w-full overflow-y-auto">
+          <a :href="item" v-for="(item, index) in paginatedContent" :key="index"
+            class="text-white p-6 border-b-2 border-gray-700 text-left hover:bg-gray-700 flex items-center gap-4 truncate">
             <SearchOutlined />
             {{ item }}
           </a>
         </transition-group>
       </div>
     </div>
-    <div
-      class="flex space-x-2 border-[3px] border-[#1DDAB7] rounded-xl select-none"
-    >
-      <label
-        class="radio flex flex-grow items-center justify-center rounded-lg p-1 cursor-pointer"
-      >
-        <input
-          type="radio"
-          name="radio"
-          value="tfidf"
-          class="peer hidden"
-          checked=""
-          v-model="search_type"
-        />
+    <a-pagination class="custom-pagination" :current="currentPage" :total="totalItems" :pageSize="itemsPerPage"
+      @change="handlePageChange" />
+
+    <div class="flex space-x-2 border-[3px] border-[#1DDAB7] rounded-xl select-none">
+      <label class="radio flex flex-grow items-center justify-center rounded-lg p-1 cursor-pointer">
+        <input type="radio" name="radio" value="tfidf" class="peer hidden" checked="" v-model="search_type" />
         <span
-          class="tracking-widest peer-checked:bg-gradient-to-r peer-checked:from-[#2af598] peer-checked:to-[#009efd] peer-checked:text-white text-white font-light p-2 rounded-lg"
-          >TF-IDF</span
-        >
+          class="tracking-widest peer-checked:bg-gradient-to-r peer-checked:from-[#2af598] peer-checked:to-[#009efd] peer-checked:text-white text-white font-light p-2 rounded-lg">TF-IDF</span>
       </label>
 
-      <label
-        class="radio flex flex-grow items-center justify-center rounded-lg p-1 cursor-pointer"
-      >
-        <input
-          v-model="search_type"
-          type="radio"
-          name="radio"
-          value="pageRank"
-          class="peer hidden"
-        />
+      <label class="radio flex flex-grow items-center justify-center rounded-lg p-1 cursor-pointer">
+        <input v-model="search_type" type="radio" name="radio" value="pageRank" class="peer hidden" />
         <span
-          class="tracking-widest peer-checked:bg-gradient-to-r peer-checked:from-[#2af598] peer-checked:to-[#009efd] peer-checked:text-white text-white font-light p-2 rounded-lg"
-          >Page Rank</span
-        >
+          class="tracking-widest peer-checked:bg-gradient-to-r peer-checked:from-[#2af598] peer-checked:to-[#009efd] peer-checked:text-white text-white font-light p-2 rounded-lg">Page
+          Rank</span>
       </label>
     </div>
   </main>
@@ -75,13 +40,22 @@
 
 <!-- The rest of your code remains the same -->
 <script setup>
+import { ref, computed } from 'vue';
 const value = ref("");
 const search_type = ref("tfidf");
 const fakeContent = ref([]);
+const currentPage = ref(1);
+const itemsPerPage = ref(10);
+const totalItems = computed(() => fakeContent.value.length);
 
 watch(search_type, () => {
   searchValueChange();
 });
+
+const direction = computed(() => {
+  const arabic_regex = /[\u0600-\u06FF]/;
+  return arabic_regex.test(value.value) ? "rtl" : "ltr";
+})
 
 const searchValueChange = async () => {
   if (search_type.value === "tfidf") {
@@ -91,10 +65,47 @@ const searchValueChange = async () => {
     const { data } = await useFetch(`/api/page_rank?value=${value.value}`);
     fakeContent.value = data.value.results;
   }
+  currentPage.value = 1; // Reset to first page when new search is made
+
 };
+
+const handlePageChange = (page) => {
+  currentPage.value = page;
+};
+const paginatedContent = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+  return fakeContent.value.slice(start, end);
+});
 </script>
 
-<style scoped>
+<style>
+.ant-pagination-item-ellipsis {
+  color: white !important;
+}
+.ant-pagination .ant-pagination-item a {
+  color: white !important;
+}
+
+.ant-pagination .ant-pagination-item-active {
+  background-color: transparent !important;
+  border-color: #1DDAB7 !important;
+}
+
+
+
+.ant-pagination .ant-pagination-next button {
+  color: white !important;
+}
+
+.ant-pagination .ant-pagination-prev button {
+  color: white !important;
+}
+
+.ant-pagination-disabled {
+  color: rgba(255, 255, 255, 0.268) !important;
+}
+
 /* The emerging W3C standard that is currently Firefox only */
 * {
   scrollbar-width: thin;
@@ -133,10 +144,8 @@ const searchValueChange = async () => {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: var(
-    --gradient-2,
-    linear-gradient(90deg, #2af598 0%, #009efd 100%)
-  );
+  background: var(--gradient-2,
+      linear-gradient(90deg, #2af598 0%, #009efd 100%));
   border: 0;
   display: flex;
   align-items: center;
